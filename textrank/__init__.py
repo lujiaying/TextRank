@@ -106,11 +106,15 @@ def extract_key_phrases(text):
     # text (a third of the number of vertices)
     one_third = len(word_set_list) // 3
     keyphrases = keyphrases[0:one_third + 1]
+    #keyphrases_with_scores = [(k, calculated_page_rank.get(k)) for k in keyphrases]
+    #print('keyphrases: %s' % (keyphrases))
+    #print('keyphrases_with_scores: %s' % (keyphrases_with_scores))
 
     # take keyphrases with multiple words into consideration as done in the
     # paper - if two words are adjacent in the text and are selected as
     # keywords, join them together
     modified_key_phrases = set([])
+    modified_key_phrases_with_scores = set([])
     # keeps track of individual keywords that have been joined to form a
     # keyphrase
     dealt_with = set([])
@@ -122,22 +126,28 @@ def extract_key_phrases(text):
         if first in keyphrases and second in keyphrases:
             keyphrase = first + ' ' + second
             modified_key_phrases.add(keyphrase)
+            modified_key_phrases_with_scores.add((keyphrase, (calculated_page_rank.get(first) + calculated_page_rank.get(second))/2.0))
             dealt_with.add(first)
             dealt_with.add(second)
         else:
             if first in keyphrases and first not in dealt_with:
                 modified_key_phrases.add(first)
+                modified_key_phrases_with_scores.add((first, calculated_page_rank.get(first)))
 
             # if this is the last word in the text, and it is a keyword, it
             # definitely has no chance of being a keyphrase at this point
             if j == len(textlist) - 1 and second in keyphrases and \
                     second not in dealt_with:
                 modified_key_phrases.add(second)
+                modified_key_phrases_with_scores.add((second, calculated_page_rank.get(second)))
 
         i = i + 1
         j = j + 1
 
-    return modified_key_phrases
+    modified_key_phrases_with_scores_sorted = sorted(modified_key_phrases_with_scores, key=lambda _:_[1], reverse=True)
+    #print(modified_key_phrases_with_scores_sorted)
+    #return modified_key_phrases
+    return modified_key_phrases_with_scores_sorted
 
 
 def extract_sentences(text, summary_length=100, clean_sentences=False, language='english'):
